@@ -22,61 +22,77 @@ No browser extension. Works with any app on macOS.
 
 STRIX uses a **LangGraph supervisor + specialist agents** system. Every claim is routed to the right domain expert, which searches the web in real time before Claude synthesises a verdict.
 
-```
-╔══════════════════════════════════════════════════════════════════╗
-║                        macOS HELPER APP                          ║
-║                                                                  ║
-║   [ User selects text ]  ──►  [ Cmd+Shift+X ]                   ║
-║          ▼                          ▼                            ║
-║   Reads clipboard            Swift menu-bar app                  ║
-║                                     │                            ║
-║                            HTTP POST /api/check                  ║
-╚═════════════════════════════════════╪════════════════════════════╝
-                                      │
-╔═════════════════════════════════════▼════════════════════════════╗
-║                        FASTAPI BACKEND                           ║
-║                                                                  ║
-║   ┌─────────────────────────────────────────────────────────┐   ║
-║   │                   LRU CACHE (in-memory)                 │   ║
-║   │   identical claim within session → instant reply        │   ║
-║   └──────────────────────┬──────────────────────────────────┘   ║
-║                           │ (cache miss)                         ║
-║   ┌───────────────────────▼─────────────────────────────────┐   ║
-║   │              LANGGRAPH SUPERVISOR                        │   ║
-║   │              Claude Sonnet 4.5                           │   ║
-║   │                                                          │   ║
-║   │  Reads the claim → decides which specialist(s) to call   │   ║
-║   │  → collects their findings → writes the final verdict    │   ║
-║   └──┬──────────┬──────────┬──────────┬──────────┬──────────┘   ║
-║      │          │          │          │          │               ║
-║      ▼          ▼          ▼          ▼          ▼               ║
-║  ┌───────┐ ┌───────┐ ┌───────┐ ┌───────┐ ┌───────┐             ║
-║  │POLITICS│ │SCIENCE│ │FINANCE│ │GENERAL│ │ NEWS  │  Agents     ║
-║  │ Agent │ │ Agent │ │ Agent │ │ Agent │ │ Agent │  Claude     ║
-║  │       │ │       │ │       │ │       │ │       │  Haiku 4.5  ║
-║  └───┬───┘ └───┬───┘ └───┬───┘ └───┬───┘ └───┬───┘             ║
-║      │         │          │         │          │                 ║
-║    Tavily    Tavily     Tavily    Wikipedia   GNews              ║
-║    GNews     arXiv      GNews     Tavily     Tavily             ║
-║                                              Web Fetch          ║
-║                                                                  ║
-║   ┌──────────────────────────────────────────────────────────┐  ║
-║   │                   STRUCTURED VERDICT                     │  ║
-║   │  verdict · confidence · explanation · sources · rewrite  │  ║
-║   └────────────────┬────────────────────────┬────────────────┘  ║
-║                    │                        │                    ║
-╚════════════════════╪════════════════════════╪════════════════════╝
-                     │                        │
-          ╔══════════▼══════╗      ╔══════════▼══════════╗
-          ║  POPUP RESULT   ║      ║  SQLITE DATABASE    ║
-          ║                 ║      ║  (local, persisted) ║
-          ║ 🟢 Supported    ║      ║                     ║
-          ║ 🔴 Unsupported  ║      ╚══════════╤══════════╝
-          ║ 🟡 Misleading   ║                 │
-          ║ 🟠 Needs Context║      ╔══════════▼══════════╗
-          ╚═════════════════╝      ║  REACT DASHBOARD    ║
-                                   ║  Timeline · Charts  ║
-                                   ╚═════════════════════╝
+```mermaid
+flowchart TD
+    classDef user     fill:#7c3aed,stroke:#5b21b6,color:#fff,font-weight:bold
+    classDef helper   fill:#4f46e5,stroke:#3730a3,color:#fff
+    classDef cache    fill:#0369a1,stroke:#075985,color:#fff
+    classDef super    fill:#b45309,stroke:#92400e,color:#fff,font-weight:bold
+    classDef agent    fill:#047857,stroke:#064e3b,color:#fff
+    classDef tool     fill:#374151,stroke:#1f2937,color:#fff
+    classDef verdict  fill:#b91c1c,stroke:#991b1b,color:#fff,font-weight:bold
+    classDef store    fill:#0e7490,stroke:#155e75,color:#fff
+    classDef dash     fill:#be185d,stroke:#9d174d,color:#fff
+
+    SEL["📝 Select text on screen"]
+    HOT["⌨️  Cmd + Shift + X"]
+    APP["🦉 Swift Helper App\n───────────────────\nGlobal hotkey listener\nClipboard reader\nMenu bar icon"]
+
+    SEL --> HOT --> APP
+    APP -->|"POST /api/check"| CACHE
+
+    subgraph BACK["⚡  FastAPI Backend"]
+        CACHE{"🗄️ LRU Cache\nidentical claim?"}
+    end
+
+    CACHE -->|"✅ Hit — instant reply"| VER
+    CACHE -->|"❌ Miss"| SUP
+
+    subgraph LG["🧠  LangGraph — Multi-Agent System"]
+        SUP["👔 Supervisor\n─────────────────────\nClaude Sonnet 4.5\nRoutes claim to experts\nSynthesises final verdict"]
+
+        subgraph SPEC["Specialist Agents · Claude Haiku 4.5"]
+            direction LR
+            A1["🏛️ Political\nAnalyst"]
+            A2["🔬 Science\nVerifier"]
+            A3["💹 Finance\nAnalyst"]
+            A4["📚 General\nKnowledge"]
+            A5["📰 News\nVerifier"]
+        end
+
+        subgraph APIS["🔍  Search APIs"]
+            direction LR
+            T1["Tavily\nWeb Search"]
+            T2["GNews\nNews"]
+            T3["arXiv\nPapers"]
+            T4["Wikipedia\nEncyclopedia"]
+            T5["Web\nFetch"]
+        end
+
+        SUP --> A1 & A2 & A3 & A4 & A5
+        A1 --> T1 & T2
+        A2 --> T1 & T3
+        A3 --> T1 & T2
+        A4 --> T4 & T1
+        A5 --> T2 & T1 & T5
+        T1 & T2 & T3 & T4 & T5 --> SUP
+    end
+
+    SUP --> VER["📋 Structured Verdict\n────────────────────────────\nverdict · confidence score\nexplanation · sources · rewrite"]
+
+    VER --> POP["🟢 Popup Window\nResult shown to user"]
+    VER --> DB[("💾 SQLite\nLocal DB")]
+    DB  --> DSH["📊 React Dashboard\nTimeline · Analytics · Charts"]
+
+    class SEL,HOT user
+    class APP helper
+    class CACHE cache
+    class SUP super
+    class A1,A2,A3,A4,A5 agent
+    class T1,T2,T3,T4,T5 tool
+    class VER,POP verdict
+    class DB store
+    class DSH dash
 ```
 
 ---
