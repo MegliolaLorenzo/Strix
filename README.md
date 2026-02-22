@@ -24,72 +24,44 @@ STRIX uses a **LangGraph supervisor + specialist agents** system. Every claim is
 
 ```mermaid
 flowchart TD
-    classDef user     fill:#7c3aed,stroke:#5b21b6,color:#fff,font-weight:bold
-    classDef helper   fill:#4f46e5,stroke:#3730a3,color:#fff
-    classDef cache    fill:#0369a1,stroke:#075985,color:#fff
-    classDef super    fill:#b45309,stroke:#92400e,color:#fff,font-weight:bold
-    classDef agent    fill:#047857,stroke:#064e3b,color:#fff
-    classDef tool     fill:#374151,stroke:#1f2937,color:#fff
-    classDef verdict  fill:#b91c1c,stroke:#991b1b,color:#fff,font-weight:bold
-    classDef store    fill:#0e7490,stroke:#155e75,color:#fff
-    classDef dash     fill:#be185d,stroke:#9d174d,color:#fff
+    classDef user    fill:#7c3aed,stroke:#5b21b6,color:#fff
+    classDef helper  fill:#4f46e5,stroke:#3730a3,color:#fff
+    classDef cache   fill:#0369a1,stroke:#075985,color:#fff
+    classDef super   fill:#b45309,stroke:#92400e,color:#fff,font-weight:bold
+    classDef agents  fill:#047857,stroke:#064e3b,color:#fff
+    classDef tools   fill:#374151,stroke:#1f2937,color:#fff
+    classDef verdict fill:#b91c1c,stroke:#991b1b,color:#fff
+    classDef store   fill:#0e7490,stroke:#155e75,color:#fff
+    classDef dash    fill:#be185d,stroke:#9d174d,color:#fff
 
-    SEL["📝 Select text on screen"]
-    HOT["⌨️  Cmd + Shift + X"]
-    APP["🦉 Swift Helper App\n───────────────────\nGlobal hotkey listener\nClipboard reader\nMenu bar icon"]
-
-    SEL --> HOT --> APP
+    SEL["📝 Select text"] --> HOT["⌨️ Cmd + Shift + X"] --> APP["🦉 Swift Helper App"]
     APP -->|"POST /api/check"| CACHE
 
-    subgraph BACK["⚡  FastAPI Backend"]
-        CACHE{"🗄️ LRU Cache\nidentical claim?"}
+    subgraph BACK["⚡ FastAPI Backend"]
+        CACHE{"🗄️ LRU Cache"}
     end
 
-    CACHE -->|"✅ Hit — instant reply"| VER
-    CACHE -->|"❌ Miss"| SUP
+    CACHE -->|"Hit"| VER
+    CACHE -->|"Miss"| SUP
 
-    subgraph LG["🧠  LangGraph — Multi-Agent System"]
-        SUP["👔 Supervisor\n─────────────────────\nClaude Sonnet 4.5\nRoutes claim to experts\nSynthesises final verdict"]
-
-        subgraph SPEC["Specialist Agents · Claude Haiku 4.5"]
-            direction LR
-            A1["🏛️ Political\nAnalyst"]
-            A2["🔬 Science\nVerifier"]
-            A3["💹 Finance\nAnalyst"]
-            A4["📚 General\nKnowledge"]
-            A5["📰 News\nVerifier"]
-        end
-
-        subgraph APIS["🔍  Search APIs"]
-            direction LR
-            T1["Tavily\nWeb Search"]
-            T2["GNews\nNews"]
-            T3["arXiv\nPapers"]
-            T4["Wikipedia\nEncyclopedia"]
-            T5["Web\nFetch"]
-        end
-
-        SUP --> A1 & A2 & A3 & A4 & A5
-        A1 --> T1 & T2
-        A2 --> T1 & T3
-        A3 --> T1 & T2
-        A4 --> T4 & T1
-        A5 --> T2 & T1 & T5
-        T1 & T2 & T3 & T4 & T5 --> SUP
+    subgraph LG["🧠 LangGraph — Multi-Agent System"]
+        SUP["👔 Supervisor — Claude Sonnet 4.5"]
+        AG["🏛️ Political · 🔬 Science · 💹 Finance · 📚 General · 📰 News\nSpecialist Agents — Claude Haiku 4.5"]
+        TL["Tavily · GNews · arXiv · Wikipedia · Web Fetch"]
+        SUP --> AG --> TL --> SUP
     end
 
-    SUP --> VER["📋 Structured Verdict\n────────────────────────────\nverdict · confidence score\nexplanation · sources · rewrite"]
-
-    VER --> POP["🟢 Popup Window\nResult shown to user"]
-    VER --> DB[("💾 SQLite\nLocal DB")]
-    DB  --> DSH["📊 React Dashboard\nTimeline · Analytics · Charts"]
+    SUP --> VER["📋 Structured Verdict"]
+    VER --> POP["🟢 Popup Window"]
+    VER --> DB[("💾 SQLite")]
+    DB  --> DSH["📊 React Dashboard"]
 
     class SEL,HOT user
     class APP helper
     class CACHE cache
     class SUP super
-    class A1,A2,A3,A4,A5 agent
-    class T1,T2,T3,T4,T5 tool
+    class AG agents
+    class TL tools
     class VER,POP verdict
     class DB store
     class DSH dash
