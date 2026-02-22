@@ -24,14 +24,15 @@ STRIX uses a **LangGraph supervisor + specialist agents** system. Every claim is
 
 ```mermaid
 flowchart TD
-    classDef user    fill:none,stroke:#7c3aed,color:#a78bfa
-    classDef helper  fill:none,stroke:#4f46e5,color:#818cf8
-    classDef cache   fill:none,stroke:#0369a1,color:#38bdf8
-    classDef super   fill:none,stroke:#d97706,color:#fbbf24,font-weight:bold
-    classDef agent   fill:none,stroke:#059669,color:#34d399
-    classDef verdict fill:none,stroke:#dc2626,color:#f87171
-    classDef store   fill:none,stroke:#0891b2,color:#22d3ee
-    classDef dash    fill:none,stroke:#db2777,color:#f472b6
+    classDef user    fill:#7c3aed,stroke:#5b21b6,color:#fff
+    classDef helper  fill:#4f46e5,stroke:#3730a3,color:#fff
+    classDef cache   fill:#0369a1,stroke:#075985,color:#fff
+    classDef super   fill:#b45309,stroke:#92400e,color:#fff,font-weight:bold
+    classDef agents  fill:#047857,stroke:#064e3b,color:#fff
+    classDef tools   fill:#374151,stroke:#1f2937,color:#fff
+    classDef verdict fill:#b91c1c,stroke:#991b1b,color:#fff
+    classDef store   fill:#0e7490,stroke:#155e75,color:#fff
+    classDef dash    fill:#be185d,stroke:#9d174d,color:#fff
 
     SEL["📝 Select text"] --> HOT["⌨️ Cmd + Shift + X"] --> APP["🦉 Swift Helper App"]
     APP -->|"POST /api/check"| CACHE
@@ -45,21 +46,12 @@ flowchart TD
 
     subgraph LG["🧠 LangGraph — Multi-Agent System"]
         SUP["👔 Supervisor — Claude Sonnet 4.5"]
-
-        subgraph SPEC["Specialist Agents — Claude Haiku 4.5"]
-            direction LR
-            AG1["🏛️ Political Analyst\nTavily · GNews"]
-            AG2["🔬 Science Verifier\nTavily · arXiv"]
-            AG3["💹 Finance Analyst\nTavily · GNews"]
-            AG4["📚 General Knowledge\nWikipedia · Tavily"]
-            AG5["📰 News Verifier\nGNews · Tavily · Web Fetch"]
-        end
-
-        SUP --> AG1 & AG2 & AG3 & AG4 & AG5
-        AG1 & AG2 & AG3 & AG4 & AG5 --> SUP
+        AG["🏛️ Political · 🔬 Science · 💹 Finance · 📚 General · 📰 News\nSpecialist Agents — Claude Haiku 4.5"]
+        TL["Tavily · GNews · arXiv · Wikipedia · Web Fetch"]
+        SUP --> AG --> TL --> SUP
     end
 
-    SUP --> VER["📋 Structured Verdict\nverdict · confidence · sources · rewrite"]
+    SUP --> VER["📋 Structured Verdict"]
     VER --> POP["🟢 Popup Window"]
     VER --> DB[("💾 SQLite")]
     DB  --> DSH["📊 React Dashboard"]
@@ -68,7 +60,8 @@ flowchart TD
     class APP helper
     class CACHE cache
     class SUP super
-    class AG1,AG2,AG3,AG4,AG5 agent
+    class AG agents
+    class TL tools
     class VER,POP verdict
     class DB store
     class DSH dash
