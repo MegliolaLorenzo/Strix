@@ -1,20 +1,25 @@
 # 🦉 STRIX
 
-> **Real-time AI fact-checking for your desktop.**
-> Select any text, press a hotkey, get a source-backed verdict in seconds.
+> **Fact-check anything, without leaving the page you're on.**
 
-No browser extension. Works with any app on macOS.
+You're reading an article. You see a claim that looks off. Normally you'd copy it, open a new tab, paste it into Google or an AI, wait for an answer, then come back.
+**STRIX cuts all of that.** Highlight the text, press `Cmd+Shift+X` — a verdict appears in under 15 seconds, right on top of what you're reading. No tab switching, no copy-pasting, no context lost.
+
+Works in any app: Safari, Chrome, Twitter, Slack, PDFs, news readers, anything.
 
 ---
 
 ## ✨ How It Works
 
 ```
- 1. 📝  Select any text on screen
- 2. ⌨️   Press  Cmd + Shift + X
- 3. 🦉  STRIX popup appears with the verdict
- 4. 📊  Check is saved to your local dashboard
+ 1. 📝  Read something — article, tweet, email, PDF
+ 2. 🖱️   Highlight the claim you want to verify
+ 3. ⌨️   Press  Cmd + Shift + X
+ 4. 🦉  Verdict popup appears on top of your screen
+ 5. 📊  Check is saved to your local dashboard
 ```
+
+No copy-paste. No tab switching. No context lost.
 
 ---
 
