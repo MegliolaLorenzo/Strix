@@ -24,45 +24,36 @@ STRIX uses a **LangGraph ReAct agent** backed by Claude Sonnet 4.5. The agent au
 
 ```mermaid
 flowchart TD
-    classDef user    fill:#7c3aed,stroke:#5b21b6,color:#fff
-    classDef helper  fill:#4f46e5,stroke:#3730a3,color:#fff
-    classDef cache   fill:#0369a1,stroke:#075985,color:#fff
-    classDef agent   fill:#b45309,stroke:#92400e,color:#fff,font-weight:bold
-    classDef tools   fill:#374151,stroke:#1f2937,color:#fff
-    classDef verdict fill:#b91c1c,stroke:#991b1b,color:#fff
-    classDef store   fill:#0e7490,stroke:#155e75,color:#fff
-    classDef dash    fill:#be185d,stroke:#9d174d,color:#fff
+    A["📝 Select text"]:::s1
+    B["⌨️ Cmd+Shift+X"]:::s1
+    C["🦉 Swift Helper"]:::s2
+    D["⚡ FastAPI + Cache"]:::s3
+    E["🧠 ReAct Agent\nClaude Sonnet 4.5"]:::s4
+    F["🔍 Tavily"]:::s5
+    G["📰 GNews"]:::s5
+    H["🔬 arXiv"]:::s5
+    I["📖 Wikipedia"]:::s5
+    J["📋 Verdict"]:::s6
+    K["🟢 Popup"]:::s7
+    L["💾 SQLite"]:::s8
+    M["📊 Dashboard"]:::s9
 
-    SEL["📝 Select text"] --> HOT["⌨️ Cmd + Shift + X"] --> APP["🦉 Swift Helper App"]
-    APP -->|"POST /api/check"| CACHE
+    A --> B --> C --> D --> E
+    E --> F & G & H & I
+    F & G & H & I --> E
+    E --> J
+    J --> K
+    J --> L --> M
 
-    subgraph BACK["⚡ FastAPI Backend"]
-        CACHE{"🗄️ LRU Cache"}
-    end
-
-    CACHE -->|"Hit"| VER
-    CACHE -->|"Miss"| AG
-
-    subgraph LG["🧠 LangGraph — ReAct Agent · Claude Sonnet 4.5"]
-        AG["Reads the claim\nSelects tools autonomously\nSynthesises the verdict"]
-        TL["🔍 Tavily  ·  📰 GNews  ·  🔬 arXiv  ·  📖 Wikipedia"]
-        AG -->|"calls"| TL
-        TL -->|"results"| AG
-    end
-
-    AG --> VER["📋 Structured Verdict"]
-    VER --> POP["🟢 Popup Window"]
-    VER --> DB[("💾 SQLite")]
-    DB  --> DSH["📊 React Dashboard"]
-
-    class SEL,HOT user
-    class APP helper
-    class CACHE cache
-    class AG agent
-    class TL tools
-    class VER,POP verdict
-    class DB store
-    class DSH dash
+    classDef s1 fill:#a78bfa,stroke:#7c3aed,color:#fff,stroke-width:2
+    classDef s2 fill:#818cf8,stroke:#4f46e5,color:#fff,stroke-width:2
+    classDef s3 fill:#38bdf8,stroke:#0284c7,color:#fff,stroke-width:2
+    classDef s4 fill:#fbbf24,stroke:#d97706,color:#78350f,stroke-width:2
+    classDef s5 fill:#1e293b,stroke:#334155,color:#e2e8f0,stroke-width:2
+    classDef s6 fill:#f87171,stroke:#dc2626,color:#fff,stroke-width:2
+    classDef s7 fill:#4ade80,stroke:#16a34a,color:#052e16,stroke-width:2
+    classDef s8 fill:#2dd4bf,stroke:#0d9488,color:#042f2e,stroke-width:2
+    classDef s9 fill:#e879f9,stroke:#a21caf,color:#fff,stroke-width:2
 ```
 
 ---
