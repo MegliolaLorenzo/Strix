@@ -24,7 +24,6 @@ class Verdict(BaseModel):
     explanation: str
     sources: list[Source]
     rewrite_suggestion: Optional[str] = None
-    agent: Optional[str] = None
     checked_at: str
     search_time_ms: int
     analysis_time_ms: int

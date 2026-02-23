@@ -15,7 +15,6 @@ interface Check {
   explanation: string;
   sources: Source[];
   rewrite_suggestion: string | null;
-  agent: string | null;
   checked_at: string;
   search_time_ms: number;
   analysis_time_ms: number;
@@ -35,30 +34,12 @@ const V_BG: Record<string, string> = {
   "Needs Context": "#EFF6FF",
 };
 
-function formatAgentLabel(agent: string | null): string | null {
-  if (!agent) return null;
-  const cleaned = agent.trim();
-  if (!cleaned) return null;
-
-  const key = cleaned.toLowerCase().replace(/[-\s]+/g, "_");
-  const labels: Record<string, string> = {
-    political_analyst: "Political Analyst",
-    science_verifier: "Science Verifier",
-    finance_analyst: "Finance Analyst",
-    general_knowledge: "General Knowledge",
-    news_verifier: "News Verifier",
-  };
-
-  return labels[key] ?? cleaned;
-}
-
 export default function VerdictCard({ check, index = 0 }: { check: Check; index?: number }) {
   const [expanded, setExpanded] = useState(false);
   const color = V_COLORS[check.verdict] ?? "#8E8E93";
   const bg = V_BG[check.verdict] ?? "#F5F5F7";
   const totalS = ((check.search_time_ms + check.analysis_time_ms) / 1000).toFixed(1);
   const confColor = check.confidence >= 70 ? "#34C759" : check.confidence >= 40 ? "#FF9500" : "#FF3B30";
-  const agentLabel = formatAgentLabel(check.agent);
 
   const when = new Date(check.checked_at).toLocaleString("en-US", {
     month: "short", day: "numeric", hour: "2-digit", minute: "2-digit",
@@ -95,14 +76,6 @@ export default function VerdictCard({ check, index = 0 }: { check: Check; index?
             <span className="text-[11px] font-mono text-gray-400">
               {check.confidence}%
             </span>
-            {agentLabel && (
-              <span
-                className="text-[10px] font-semibold px-2 py-0.5 rounded-md border border-gray-200 bg-gray-50 text-gray-600 max-w-[190px] truncate"
-                title={`Agent: ${agentLabel}`}
-              >
-                Agent: {agentLabel}
-              </span>
-            )}
             <span className="text-[11px] text-gray-300">{totalS}s</span>
             <span className="text-[11px] text-gray-300">{when}</span>
           </div>

@@ -42,7 +42,6 @@ async def fact_check(request: CheckRequest):
         "explanation": analysis.get("explanation", "Analysis could not be completed."),
         "sources": analysis.get("sources", [])[:8],
         "rewrite_suggestion": analysis.get("rewrite_suggestion"),
-        "agent": analysis.get("agent"),
         "checked_at": datetime.now(timezone.utc).isoformat(),
         "search_time_ms": search_ms,
         "analysis_time_ms": analysis_ms,

@@ -18,7 +18,6 @@ struct Verdict: Codable {
     let explanation: String
     let sources: [Source]
     let rewrite_suggestion: String?
-    let agent: String?
     let search_time_ms: Int
     let analysis_time_ms: Int
 }
@@ -144,27 +143,6 @@ class StrixPopup: NSWindow {
     }
 
     @objc private func closeMe() { orderOut(nil) }
-
-    private func normalizedAgentLabel(_ raw: String?) -> String {
-        guard let raw else { return "N/A" }
-        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-        if trimmed.isEmpty { return "N/A" }
-
-        let key = trimmed
-            .lowercased()
-            .replacingOccurrences(of: "-", with: "_")
-            .replacingOccurrences(of: " ", with: "_")
-
-        let known: [String: String] = [
-            "political_analyst": "Political Analyst",
-            "science_verifier": "Science Verifier",
-            "finance_analyst": "Finance Analyst",
-            "general_knowledge": "General Knowledge",
-            "news_verifier": "News Verifier",
-        ]
-
-        return known[key] ?? "Unknown Agent"
-    }
 
     private func makeOwlLabel(size: CGFloat = 18) -> NSTextField {
         makeLabel("🦉", size: size, color: .labelColor)
@@ -306,13 +284,12 @@ class StrixPopup: NSWindow {
         let bgClr  = verdictBg[verdict.verdict]   ?? owlPaper
         let emoji  = verdictEmoji[verdict.verdict] ?? "?"
         let conf   = verdict.confidence
-        let agentLabel = normalizedAgentLabel(verdict.agent)
         let totalS = Double(verdict.search_time_ms + verdict.analysis_time_ms) / 1000.0
 
         // ── Verdict header ──
         let header = makeVerdictHeader(
             emoji: emoji, verdictText: verdict.verdict,
-            confidence: conf, color: color, bg: bgClr, agentLabel: agentLabel
+            confidence: conf, color: color, bg: bgClr
         )
         v.addSubview(header)
 
@@ -402,8 +379,7 @@ class StrixPopup: NSWindow {
     // MARK: – View factory helpers
 
     private func makeVerdictHeader(emoji: String, verdictText: String,
-                                   confidence: Int, color: NSColor, bg: NSColor,
-                                   agentLabel: String) -> NSView {
+                                   confidence: Int, color: NSColor, bg: NSColor) -> NSView {
         let header = NSView(); header.wantsLayer = true
         header.layer?.backgroundColor = bg.cgColor
         header.translatesAutoresizingMaskIntoConstraints = false
@@ -420,18 +396,6 @@ class StrixPopup: NSWindow {
         // Verdict label
         let vLbl = makeLabel("\(emoji)  \(verdictText)", size: 18, color: color, bold: true)
         header.addSubview(vLbl)
-
-        let agentBadge = NSView()
-        agentBadge.wantsLayer = true
-        agentBadge.layer?.backgroundColor = NSColor.white.withAlphaComponent(0.6).cgColor
-        agentBadge.layer?.cornerRadius = 7
-        agentBadge.layer?.borderColor = owlBeige.withAlphaComponent(0.9).cgColor
-        agentBadge.layer?.borderWidth = 1
-        agentBadge.translatesAutoresizingMaskIntoConstraints = false
-        header.addSubview(agentBadge)
-
-        let agentLbl = makeLabel("Agent: \(agentLabel)", size: 10, color: owlMuted, bold: true)
-        agentBadge.addSubview(agentLbl)
 
         // Confidence number
         let confNum = makeLabel("\(confidence)%", size: 26, color: color, bold: true)
@@ -464,14 +428,6 @@ class StrixPopup: NSWindow {
 
             vLbl.leadingAnchor.constraint(equalTo: header.leadingAnchor, constant: 20),
             vLbl.topAnchor.constraint(equalTo: brandLbl.bottomAnchor, constant: 6),
-
-            agentBadge.leadingAnchor.constraint(equalTo: header.leadingAnchor, constant: 20),
-            agentBadge.topAnchor.constraint(equalTo: vLbl.bottomAnchor, constant: 6),
-
-            agentLbl.topAnchor.constraint(equalTo: agentBadge.topAnchor, constant: 2),
-            agentLbl.leadingAnchor.constraint(equalTo: agentBadge.leadingAnchor, constant: 7),
-            agentLbl.trailingAnchor.constraint(equalTo: agentBadge.trailingAnchor, constant: -7),
-            agentLbl.bottomAnchor.constraint(equalTo: agentBadge.bottomAnchor, constant: -2),
 
             confNum.trailingAnchor.constraint(equalTo: header.trailingAnchor, constant: -52),
             confNum.topAnchor.constraint(equalTo: header.topAnchor, constant: 16),
