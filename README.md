@@ -3,7 +3,7 @@
 > **Fact-check anything, without leaving the page you're on.**
 
 You're reading an article. You see a claim that looks off. Normally you'd copy it, open a new tab, paste it into Google or an AI, wait for an answer, then come back.
-**STRIX cuts all of that.** Highlight the text, press `Cmd+Shift+X` — a verdict appears in under 15 seconds, right on top of what you're reading. No tab switching, no copy-pasting, no context lost.
+**STRIX cuts all of that.** Highlight the text, press `Cmd+Shift+X` and a verdict appears in under 15 seconds, right on top of what you're reading. No tab switching, no copy-pasting, no context lost.
 
 Works in any app: Safari, Chrome, Twitter, Slack, PDFs, news readers, anything.
 
