@@ -18,17 +18,16 @@ No browser extension. Works with any app on macOS.
 
 ---
 
-## 🧠 Multi-Agent Architecture
+## 🧠 Architecture
 
-STRIX uses a **LangGraph supervisor + specialist agents** system. Every claim is routed to the right domain expert, which searches the web in real time before Claude synthesises a verdict.
+STRIX uses a **LangGraph ReAct agent** backed by Claude Sonnet 4.5. The agent autonomously decides which tools to invoke based on the claim, searches the web in real time, and synthesises a structured verdict.
 
 ```mermaid
 flowchart TD
     classDef user    fill:#7c3aed,stroke:#5b21b6,color:#fff
     classDef helper  fill:#4f46e5,stroke:#3730a3,color:#fff
     classDef cache   fill:#0369a1,stroke:#075985,color:#fff
-    classDef super   fill:#b45309,stroke:#92400e,color:#fff,font-weight:bold
-    classDef agents  fill:#047857,stroke:#064e3b,color:#fff
+    classDef agent   fill:#b45309,stroke:#92400e,color:#fff,font-weight:bold
     classDef tools   fill:#374151,stroke:#1f2937,color:#fff
     classDef verdict fill:#b91c1c,stroke:#991b1b,color:#fff
     classDef store   fill:#0e7490,stroke:#155e75,color:#fff
@@ -42,16 +41,16 @@ flowchart TD
     end
 
     CACHE -->|"Hit"| VER
-    CACHE -->|"Miss"| SUP
+    CACHE -->|"Miss"| AG
 
-    subgraph LG["🧠 LangGraph — Multi-Agent System"]
-        SUP["👔 Supervisor — Claude Sonnet 4.5"]
-        AG["🏛️ Political · 🔬 Science · 💹 Finance · 📚 General · 📰 News\nSpecialist Agents — Claude Haiku 4.5"]
-        TL["Tavily · GNews · arXiv · Wikipedia · Web Fetch"]
-        SUP --> AG --> TL --> SUP
+    subgraph LG["🧠 LangGraph — ReAct Agent · Claude Sonnet 4.5"]
+        AG["Reads the claim\nSelects tools autonomously\nSynthesises the verdict"]
+        TL["🔍 Tavily  ·  📰 GNews  ·  🔬 arXiv  ·  📖 Wikipedia"]
+        AG -->|"calls"| TL
+        TL -->|"results"| AG
     end
 
-    SUP --> VER["📋 Structured Verdict"]
+    AG --> VER["📋 Structured Verdict"]
     VER --> POP["🟢 Popup Window"]
     VER --> DB[("💾 SQLite")]
     DB  --> DSH["📊 React Dashboard"]
@@ -59,8 +58,7 @@ flowchart TD
     class SEL,HOT user
     class APP helper
     class CACHE cache
-    class SUP super
-    class AG agents
+    class AG agent
     class TL tools
     class VER,POP verdict
     class DB store
@@ -69,17 +67,18 @@ flowchart TD
 
 ---
 
-## 🤖 Specialist Agents
+## 🤖 Agent & Tools
 
-Each agent is a **ReAct loop** (Reason → Act → Observe) powered by Claude Haiku 4.5. The supervisor (Claude Sonnet 4.5) routes the claim, collects results, and writes the final structured verdict.
+The agent runs a **ReAct loop** (Reason → Act → Observe → Reason) powered by Claude Sonnet 4.5. It reads the claim, picks the right tool(s), analyses the results, and writes a structured verdict — all in one pass.
 
-| Agent | Domain | Tools |
-|-------|--------|-------|
-| 🏛️ **Political Analyst** | Elections, policy, government, geopolitics | Tavily Search · GNews |
-| 🔬 **Science Verifier** | Research, health, medicine, environment | Tavily Search · arXiv |
-| 💹 **Finance Analyst** | Economics, markets, business, trade | Tavily Search · GNews |
-| 📚 **General Knowledge** | History, geography, culture, biography | Wikipedia · Tavily Search |
-| 📰 **News Verifier** | Breaking news, current events | GNews · Tavily Search · Web Fetch |
+| Tool | Used for | API |
+|------|----------|-----|
+| 🔍 **Tavily Search** | General web search — covers most claims | [tavily.com](https://tavily.com) |
+| 📰 **GNews** | Recent news, current events, politics | [gnews.io](https://gnews.io) |
+| 🔬 **arXiv** | Scientific papers, medical research, studies | [arxiv.org](https://arxiv.org) |
+| 📖 **Wikipedia** | Historical facts, biographies, geography | [wikipedia.org](https://en.wikipedia.org) |
+
+The agent uses **1 tool by default**. A second is called only when the first result is insufficient and the claim clearly spans two domains.
 
 ---
 
@@ -87,23 +86,12 @@ Each agent is a **ReAct loop** (Reason → Act → Observe) powered by Claude Ha
 
 | Layer | Technology |
 |-------|-----------|
-| 🧠 LLM — Supervisor | Claude Sonnet 4.5 (Anthropic) |
-| 🧠 LLM — Specialists | Claude Haiku 4.5 (Anthropic) |
-| 🕸️ Agent orchestration | LangGraph + LangChain |
+| 🧠 LLM | Claude Sonnet 4.5 (Anthropic) |
+| 🕸️ Agent orchestration | LangGraph ReAct |
 | ⚡ Backend | Python 3.10+ / FastAPI |
 | 🗄️ Database | SQLite via aiosqlite (local, no setup) |
 | 📊 Dashboard | React + Vite + Tailwind CSS + Recharts |
 | 🖥️ Helper App | Swift (macOS native, menu bar) |
-
-### Search APIs (all free tier)
-
-| Tool | Provider | Free Tier |
-|------|----------|-----------|
-| 🔍 Web Search | [Tavily](https://tavily.com) | 1,000 req/month |
-| 📰 News Search | [GNews](https://gnews.io) | 100 req/day |
-| 📖 Encyclopedia | Wikipedia | Unlimited |
-| 🔬 Science Papers | arXiv | Unlimited |
-| 🌐 Web Fetch | Direct HTTP | Unlimited |
 
 ---
 
@@ -114,21 +102,20 @@ Each agent is a **ReAct loop** (Reason → Act → Observe) powered by Claude Ha
 - **Python 3.10+**
 - **Node.js 18+**
 - **macOS** (for the helper app — backend + dashboard work on any OS)
-- **Xcode Command Line Tools** (`xcode-select --install`)
 
 ### 1. Clone and configure
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/strix.git
-cd strix
+git clone https://github.com/MegliolaLorenzo/Strix.git
+cd Strix
 cp .env.example .env
 # Edit .env with your API keys
 ```
 
 ### 2. Get API keys
 
-| Key | Where to get it | Free tier |
-|-----|----------------|-----------|
+| Key | Where | Free tier |
+|-----|-------|-----------|
 | `ANTHROPIC_API_KEY` | [console.anthropic.com](https://console.anthropic.com/) | Pay-as-you-go |
 | `TAVILY_API_KEY` | [app.tavily.com](https://app.tavily.com/) | 1,000 req/month |
 | `GNEWS_API_KEY` | [gnews.io](https://gnews.io/) | 100 req/day |
@@ -231,8 +218,8 @@ strix/
 │   ├── schemas.py              # Pydantic request/response models
 │   ├── requirements.txt
 │   ├── agents/
-│   │   ├── graph.py            # LangGraph supervisor + 5 specialist agents
-│   │   └── tools.py            # LangChain tools (Tavily, GNews, Wikipedia, arXiv, Web Fetch)
+│   │   ├── graph.py            # LangGraph ReAct agent + tool selection logic
+│   │   └── tools.py            # LangChain tools (Tavily, GNews, arXiv, Wikipedia)
 │   ├── routers/
 │   │   ├── check.py            # POST /api/check
 │   │   └── dashboard.py        # GET /api/checks, /api/analytics
